@@ -1,0 +1,53 @@
+def calculate_cost(state):
+    cost = 0
+    n = len(state)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if state[i] == state[j] or abs(state[i] - state[j]) == abs(i - j):
+                cost += 1
+    return cost
+
+def generate_neighbors(state):
+    neighbors = []
+    n = len(state)
+    for col in range(n):
+        for row in range(n):
+            if state[col] != row:  # move queen
+                new_state = list(state)
+                new_state[col] = row
+                neighbors.append(new_state)
+    return neighbors
+
+def hill_climbing(initial_state):
+    current = initial_state
+    current_cost = calculate_cost(current)
+    step = 0
+
+    print(f"Step {step}: State = {current}, Cost = {current_cost}")
+
+    while True:
+        neighbors = generate_neighbors(current)
+        neighbor_costs = [(n, calculate_cost(n)) for n in neighbors]
+
+        # Print state space for this step
+        print("\nNeighbors and their costs:")
+        for n, c in neighbor_costs:
+            print(f"   {n} -> Cost = {c}")
+
+        # Pick the best neighbor (lowest cost)
+        best_neighbor, best_cost = min(neighbor_costs, key=lambda x: x[1])
+
+        if best_cost >= current_cost:
+            break
+
+        step += 1
+        current, current_cost = best_neighbor, best_cost
+        print(f"\nStep {step}: Move to {current}, Cost = {current_cost}")
+
+        if current_cost == 0:
+            print("\nGoal reached! Solution found.")
+            break
+
+initial_state = [3, 1, 2, 0]
+
+hill_climbing(initial_state)
