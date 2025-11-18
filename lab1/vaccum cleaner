@@ -1,0 +1,53 @@
+def vacuum_cleaner()
+    A = int(input("Enter state of A (0 for clean, 1 for dirty): "))
+    B = int(input("Enter state of B (0 for clean, 1 for dirty): "))
+    location = input("Enter location (A or B): ").upper()
+
+    cost = 0
+    state = {'A': A, 'B': B}
+
+    if location == 'A':
+        if state['A'] == 1:  # If A is dirty
+            print("Cleaned A.")
+            state['A'] = 0
+            cost += 1
+        else:
+            print("A is clean")
+
+        if state['B'] == 1:  # If B is dirty
+            print("Moving vacuum right")
+            print("Cleaned B.")
+            state['B'] = 0
+            cost += 1
+            print("Is B clean now? (0 if clean, 1 if dirty):", state['B'])
+            print("Is A dirty? (0 if clean, 1 if dirty):", state['A'])
+            print("B is clean")
+            print("Moving vacuum left")
+        else:
+            print("Turning vacuum off")
+
+    elif location == 'B':
+        if state['B'] == 1:  # If B is dirty
+            print("Cleaned B.")
+            state['B'] = 0
+            cost += 1
+        else:
+            print("B is clean")
+
+        if state['A'] == 1:  # If A is dirty
+            print("Moving vacuum left")
+            print("Cleaned A.")
+            state['A'] = 0
+            cost += 1
+            print("Is A clean now? (0 if clean, 1 if dirty):", state['A'])
+            print("Is B dirty? (0 if clean, 1 if dirty):", state['B'])
+            print("A is clean")
+            print("Moving vacuum right")
+        else:
+            print("Turning vacuum off")
+
+    print("Cost:", cost)
+    print(state)
+    print(“Sharada Koundinya, 1BM23CS310”)
+
+vacuum_cleaner()
