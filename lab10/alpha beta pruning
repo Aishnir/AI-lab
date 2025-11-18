@@ -1,0 +1,54 @@
+# Alpha-Beta Pruning Implementation
+# ---------------------------------
+
+def alpha_beta_search(state, depth, is_maximizing):
+    """Start Alpha-Beta pruning from root."""
+    value = alphabeta(state, depth, -float('inf'), float('inf'), is_maximizing)
+    print(f"Best value at root: {value}")
+    return value
+
+def alphabeta(node, depth, alpha, beta, maximizing_player):
+    """Recursive alpha-beta pruning function."""
+
+    # Base Case: Leaf Node or Depth Limit Reached
+    if depth == 0 or isinstance(node, (int, float)):  # leaf node
+        return node
+
+    # Maximizing player's turn
+    if maximizing_player:
+        max_eval = -float('inf')
+        for child in node:
+            eval = alphabeta(child, depth - 1, alpha, beta, False)
+            max_eval = max(max_eval, eval)
+            alpha = max(alpha, eval)
+            print(f"MAX: α={alpha}, β={beta}, value={max_eval}")
+            if beta <= alpha:  # β cutoff
+                print(">> Beta cutoff!")
+                break
+        return max_eval
+
+    # Minimizing player's turn
+    else:
+        min_eval = float('inf')
+        for child in node:
+            eval = alphabeta(child, depth - 1, alpha, beta, True)
+            min_eval = min(min_eval, eval)
+            beta = min(beta, eval)
+            print(f"MIN: α={alpha}, β={beta}, value={min_eval}")
+            if beta <= alpha:  # α cutoff
+                print(">> Alpha cutoff!")
+                break
+        return min_eval
+
+# Example Game Tree (same structure as in your image)
+# Represented as nested lists
+tree = [
+    [ [10, 9], [14, 18] ],  # Left subtree
+    [ [4, 50], [3] ]        # Right subtree
+]
+
+# Run Alpha-Beta pruning on this tree
+alpha_beta_search(tree, depth=3, is_maximizing=True)
+
+
+
