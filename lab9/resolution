@@ -1,0 +1,177 @@
+from copy import deepcopy
+from itertools import combinations
+
+# ------------------------------
+# Unification Functions
+# ------------------------------
+def unify(x, y, subst):
+    if subst is None:
+        return None
+    elif x == y:
+        return subst
+    elif isinstance(x, str) and x.islower():  # variable
+        return unify_var(x, y, subst)
+    elif isinstance(y, str) and y.islower():  # variable
+        return unify_var(y, x, subst)
+    elif isinstance(x, list) and isinstance(y, list) and len(x) == len(y):
+        return unify(x[1:], y[1:], unify(x[0], y[0], subst))
+    else:
+        return None
+
+def unify_var(var, x, subst):
+    if var in subst:
+        return unify(subst[var], x, subst)
+    elif x in subst:
+        return unify(var, subst[x], subst)
+    else:
+        subst_copy = deepcopy(subst)
+        subst_copy[var] = x
+        return subst_copy
+
+def substitute(clause, subst):
+    result = []
+    for literal in clause:
+        pred, args = literal[0], literal[1]
+        new_args = [subst.get(arg, arg) for arg in args]
+        result.append((pred, new_args))
+    return result
+
+# ------------------------------
+# Resolution Logic
+# ------------------------------
+def resolve(ci, cj):
+    """Resolve two clauses and return the resolvent if possible."""
+    for di in ci:
+        for dj in cj:
+            if di[0] == f'¬{dj[0]}' or f'¬{di[0]}' == dj[0]:
+                subst = {}
+                args1, args2 = di[1], dj[1]
+                if len(args1) == len(args2):
+                    s = unify(args1, args2, subst)
+                    if s is not None:
+                        new_ci = [x for x in ci if x != di]
+                        new_cj = [x for x in cj if x != dj]
+                        new_clause = substitute(new_ci + new_cj, s)
+                        return new_clause
+    return None
+
+def clause_to_str(clause):
+    """Pretty print a clause."""
+    return " ∨ ".join([f"{p}({', '.join(a)})" for p, a in clause]) if clause else "{}"
+
+# ------------------------------
+# Resolution with Tracing
+# ------------------------------
+def resolution(KB, query):
+    clauses = deepcopy(KB)
+    neg_query = [(f'¬{query[0]}', query[1])]
+    clauses.append(neg_query)
+
+    parents = {}
+    step = 1
+
+    print("\n=== Initial Clauses (Knowledge Base + ¬Query) ===")
+    for i, c in enumerate(clauses):
+        print(f"C{i+1}: {clause_to_str(c)}")
+
+    print("\n=== Resolution Process ===")
+
+    new = []
+    while True:
+        pairs = list(combinations(range(len(clauses)), 2))
+        no_new = True
+
+        for (i, j) in pairs:
+            resolvent = resolve(clauses[i], clauses[j])
+            if resolvent is not None:
+                resolvent_str = clause_to_str(resolvent)
+                print(f"\nStep {step}: Resolve C{i+1} and C{j+1}")
+                print(f"     {clause_to_str(clauses[i])}")
+                print(f"     {clause_to_str(clauses[j])}")
+                print(f"  → Inferred: {resolvent_str}")
+                step += 1
+
+                if resolvent == []:
+                    print("\n🎯 Empty clause derived → Contradiction found!")
+                    parents["{}"] = (i+1, j+1)
+                    print_resolution_tree("{}", parents, clauses)
+                    return True
+
+                if resolvent not in clauses:
+                    clauses.append(resolvent)
+                    new.append(resolvent)
+                    parents[resolvent_str] = (i+1, j+1)
+                    no_new = False
+
+        if no_new:
+            print("\n❌ No new clauses could be generated — Query cannot be proven.")
+            print_resolution_tree("{}", parents, clauses)
+            return False
+
+# ------------------------------
+# Pretty Tree Printer
+# ------------------------------
+def print_resolution_tree(root, parents, clauses, indent="", last=True, seen=None):
+    """Recursively print resolution tree with indentation."""
+    if seen is None:
+        seen = set()
+
+    branch = "└── " if last else "├── "
+    print(indent + branch + root)
+
+    if root not in parents:
+        return
+
+    left_id, right_id = parents[root]
+    left_clause = clause_to_str(clauses[left_id - 1])
+    right_clause = clause_to_str(clauses[right_id - 1])
+
+    next_indent = indent + ("    " if last else "│   ")
+    print_resolution_tree(left_clause, parents, clauses, next_indent, False, seen)
+    print_resolution_tree(right_clause, parents, clauses, next_indent, True, seen)
+
+# ------------------------------
+# Knowledge Base (FOL Clauses)
+# ------------------------------
+KB = [
+    [('¬food', ['x']), ('likes', ['John', 'x'])],   # ∀x food(x) → likes(John, x)
+    [('food', ['Apple'])],
+    [('food', ['Vegetables'])],
+    [('¬eats', ['x', 'y']), ('killed', ['x']), ('food', ['y'])],  # eats(x,y) ∧ ¬killed(x) → food(y)
+    [('eats', ['Anil', 'Peanuts'])],
+    [('alive', ['Anil'])],
+    [('¬eats', ['Anil', 'x']), ('eats', ['Harry', 'x'])],
+    [('¬alive', ['x']), ('¬killed', ['x'])],
+    [('killed', ['x']), ('alive', ['x'])]
+]
+
+query = ('likes', ['John', 'Peanuts'])
+
+# ------------------------------
+# Run Resolution
+# ------------------------------
+result = resolution(KB, query)
+print("\n✅ John likes peanuts!" if result else "\n❌ Query cannot be proven.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
